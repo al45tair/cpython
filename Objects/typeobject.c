@@ -4502,11 +4502,19 @@ static PyObject *
 object___format___impl(PyObject *self, PyObject *format_spec)
 /*[clinic end generated code: output=34897efb543a974b input=7c3b3bc53a6fb7fa]*/
 {
+    /* Issue 31335: We should *always* support {:s} and {:r} */
+    if (PyUnicode_CompareWithASCIIString(format_spec, "s") == 0)
+        return PyObject_Str(self);
+    if (PyUnicode_CompareWithASCIIString(format_spec, "r") == 0)
+        return PyObject_Repr(self);
+
     /* Issue 7994: If we're converting to a string, we
        should reject format specifications */
     if (PyUnicode_GET_LENGTH(format_spec) > 0) {
         PyErr_Format(PyExc_TypeError,
-                     "unsupported format string passed to %.200s.__format__",
+                     "unsupported format string \"{:%S}\" passed to "
+                     "%.200s.__format__",
+                     format_spec,
                      self->ob_type->tp_name);
         return NULL;
     }
